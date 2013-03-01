@@ -388,6 +388,42 @@ module JenkinsApi
         create(job_name, job_xml)
       end
 
+
+      def copy(template_name, job_name)
+        job_xml = get_config(template_name)
+        # puts job_xml
+        # delete(job_name)
+        create(job_name, job_xml)
+      end
+
+      def cookbook(template_name, cookbook_name, clone_url)
+
+        job_name = "chef-cookbook-" + cookbook_name
+        job_search = get_config(job_name)
+
+        if job_search.include?("The requested resource () is not available")
+          copy(template_name, job_name)
+          enable(job_name)
+        else
+          post_config(job_name, get_config(template_name))
+          enable(job_name) unless job_search.include?("<disabled>true</disabled>")
+        end
+
+        change_description(job_name, "Job is automaticly created from template: chef-cookbook_jenkins-template. Please update the template if you want to make changes.")
+        change_clone_url(
+          :name => job_name,
+          :scm_url => clone_url,
+          :scm_branch => "master") unless clone_url.nil?
+      end
+
+      def update_xml(xml, name)
+        xml.gsub!("jenkins-template", name)
+      end
+    
+      def enable_job(xml)
+        xml.gsub!("<disabled>true</disabled>", "<disabled>false</disabled>")
+      end
+
       # Get progressive console output from Jenkins server for a job
       #
       # @param [String] job_name Name of the Jenkins job
@@ -625,6 +661,38 @@ module JenkinsApi
         xml_modified = n_xml.to_xml
         post_config(job_name, xml_modified)
       end
+
+      # Change or add the git clone url of a specific job
+      #
+      # @param [String] job_name
+      # @param [String] clone_url
+      #
+      # @return [String] response_code return code from HTTP POST
+      #
+      def change_clone_url(params)
+        raise "No job name specified" unless params[:name]
+        raise "No clone url specified" unless params[:scm_url]
+        raise "No brance specified" unless params[:scm_branch]
+
+        xml = get_config(params[:name])
+        n_xml = Nokogiri::XML(xml)
+
+        target = n_xml.xpath("//scm/userRemoteConfigs/hudson.plugins.git.UserRemoteConfig/url").first
+        n_xml.xpath("//scm/userRemoteConfigs/hudson.plugins.git.UserRemoteConfig/url").first.content = params[:scm_url] unless target.nil? || target.content.nil? || target.content.empty? 
+
+        target = n_xml.xpath("//scm/branches/hudson.plugins.git.BranchSpec/name").first
+        n_xml.xpath("//scm/branches/hudson.plugins.git.BranchSpec/name").first.content = params[:scm_branch] unless target.nil? || target.content.nil? || target.content.empty?
+        post_config(params[:name], n_xml.to_xml)
+      end
+ 
+      def enable(job_name)
+        xml = get_config(job_name)
+        n_xml = Nokogiri::XML(xml)
+        n_xml.xpath("//disabled").first.content = "false"
+        post_config(job_name, n_xml.to_xml)
+        # xml.gsub!("<disabled>true</disabled>", "<disabled>false</disabled>")
+      end
+
 
       # Block the build of the job when downstream is building
       #

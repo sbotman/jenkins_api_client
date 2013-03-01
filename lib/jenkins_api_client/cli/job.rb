@@ -31,8 +31,8 @@ module JenkinsApi
 
       desc "list", "List jobs"
       method_option :status, :aliases => "-t", :desc => "Status to filter"
-      method_option :filter, :aliases => "-f",
-        :desc => "Regular expression to filter jobs"
+      method_option :filter, :aliases => "-f", :desc => "Regular expression to filter jobs"
+
       def list
         @client = Helper.setup(parent_options)
         if options[:filter] && options[:status]
@@ -51,6 +51,18 @@ module JenkinsApi
       def recreate(job)
         @client = Helper.setup(parent_options)
         @client.job.recreate(job)
+      end
+
+      desc "copy JOB", "Copy a specified job"
+      def copy(job, newjob)
+        @client = Helper.setup(parent_options)
+        @client.job.copy(job, newjob)
+      end
+
+      desc "cookbook NAME", "Create jenkinscookbook job"
+      def cookbook(template, name, url)
+        @client = Helper.setup(parent_options)
+        @client.job.cookbook(template, name, url)
       end
 
       desc "build JOB", "Build a job"

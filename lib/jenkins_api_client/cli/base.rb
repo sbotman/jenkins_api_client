@@ -43,6 +43,7 @@ module JenkinsApi
       class_option :creds_file, :aliases => "-c",
         :desc => "Credentials file for communicating with Jenkins server"
 
+      class_option :jenkins_path, :aliases => "-l", :desc => "Path on server"
 
       map "-v" => :version
 

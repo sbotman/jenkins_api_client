@@ -51,7 +51,7 @@ module JenkinsApi
        raise "Credentials are required to connect to te Jenkins Server"
      end
      @server_port = DEFAULT_SERVER_PORT unless @server_port
-     @debug = false unless @debug
+     @debug = true # false unless @debug
 
      # Base64 decode inserts a newline character at the end. As a workaround
      # added chomp to remove newline characters. I hope nobody uses newline
@@ -179,7 +179,7 @@ module JenkinsApi
     # @param [String] url_prefix
     #
     def get_config(url_prefix)
-      url_prefix = URI.escape(url_prefix)
+      url_prefix = URI.escape("#{@jenkins_path}#{url_prefix}")
       http = Net::HTTP.start(@server_ip, @server_port)
       request = Net::HTTP::Get.new("#{url_prefix}/config.xml")
       puts "[INFO] GET #{url_prefix}/config.xml" if @debug
@@ -194,7 +194,7 @@ module JenkinsApi
     # @param [String] xml
     #
     def post_config(url_prefix, xml)
-      url_prefix = URI.escape(url_prefix)
+      url_prefix = URI.escape("#{@jenkins_path}#{url_prefix}")
       http = Net::HTTP.start(@server_ip, @server_port)
       request = Net::HTTP::Post.new("#{url_prefix}")
       puts "[INFO] PUT #{url_prefix}" if @debug

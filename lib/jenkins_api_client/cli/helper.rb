@@ -34,6 +34,7 @@ module JenkinsApi
             File.expand_path(options[:creds_file], __FILE__)
           )
         elsif File.exist?("#{ENV['HOME']}/.jenkins_api_client/login.yml")
+          puts "Loading credentials from file!"
           creds = YAML.load_file(
             File.expand_path(
               "#{ENV['HOME']}/.jenkins_api_client/login.yml", __FILE__
@@ -45,6 +46,7 @@ module JenkinsApi
           puts msg
           exit 1
         end
+        puts creds
         JenkinsApi::Client.new(creds)
       end
     end
